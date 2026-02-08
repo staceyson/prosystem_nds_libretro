@@ -34,6 +34,8 @@
 #include "shared.h"
 
 extern u8 bHSC_dirty;
+extern u8 is_memory_writable[256];
+extern u8 bINPTCTRL_locked;
 
 extern byte memory_ram[MEMORY_SIZE];
 extern void memory_Reset( );

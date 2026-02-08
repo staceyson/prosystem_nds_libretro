@@ -42,58 +42,41 @@
 #include "Pokey.h"
 #include "ProSystem.h"
 
-#define POKEY_NOTPOLY5 0x80
-#define POKEY_POLY4 0x40
-#define POKEY_PURE 0x20
-#define POKEY_VOLUME_ONLY 0x10
-#define POKEY_VOLUME_MASK 0x0f
-#define POKEY_POLY9 0x80 
-#define POKEY_CH1_179 0x40
-#define POKEY_CH3_179 0x20
-#define POKEY_CH1_CH2 0x10
-#define POKEY_CH3_CH4 0x08
-#define POKEY_CH1_FILTER 0x04
-#define POKEY_CH2_FILTER 0x02
-#define POKEY_CLOCK_15 0x01
-#define POKEY_DIV_64 28
-#define POKEY_DIV_15 114
-#define POKEY_POLY4_SIZE 0x000f
-#define POKEY_POLY5_SIZE 0x001f
-#define POKEY_POLY9_SIZE 0x01ff
-#define POKEY_POLY17_SIZE 0x0001ffff
-#define POKEY_CHANNEL1 0
-#define POKEY_CHANNEL2 1
-#define POKEY_CHANNEL3 2
-#define POKEY_CHANNEL4 3
-#define POKEY_SAMPLE 4
+
 
 #define SK_RESET	0x03
 
 extern byte TIA_POLY4[];
 extern byte TIA_POLY5[];
 
-u32 pokeyBufIdx __attribute__((section(".dtcm"))) = 0;
+/* Rocketfan - possibly some ARM specific code 
 
-static uint pokey_frequency = 1787520;
-static uint pokey_sampleRate = (31440/2);
-static uint pokey_audf[4];
-static uint pokey_audc[4];
-static uint pokey_audctl __attribute__((section(".dtcm")));
-static byte pokey_output[4];
-static byte pokey_outVol[4];
+__attribute__((section(".dtcm"))) in C code is a compiler attribute used in embedded systems programming to explicitly instruct the compiler and linker to place a specific variable or function into the Data Tightly Coupled Memory (DTCM) section of a microcontroller's memory. 
+This technique is primarily used in microcontrollers (especially ARM Cortex-M based devices like those from STMicroelectronics) to optimize performance for real-time applications by utilizing the unique characteristics of TCM.
+
+*/
+
+u32 pokeyBufIdx __attribute__((section(".dtcm"))) = 0;
 #define pokey_poly04 TIA_POLY4
 #define pokey_poly05 TIA_POLY5
-static byte pokey_poly17[POKEY_POLY17_SIZE];
-static uint pokey_poly17Size;
-static uint pokey_polyAdjust __attribute__((section(".dtcm")));
-static uint pokey_poly04Cntr __attribute__((section(".dtcm")));
-static uint pokey_poly05Cntr __attribute__((section(".dtcm")));
-static uint pokey_poly17Cntr __attribute__((section(".dtcm")));
-static uint pokey_divideMax[4];
-static uint pokey_divideCount[4];
-static uint pokey_sampleMax __attribute__((section(".dtcm")));
-static uint pokey_sampleCount[2];
-static uint pokey_baseMultiplier;
+static uint pokey_frequency = 1787520;
+static uint pokey_sampleRate = (31440/2);
+uint pokey_audf[4];
+uint pokey_audc[4];
+uint pokey_audctl __attribute__((section(".dtcm")));
+byte pokey_output[4];
+byte pokey_outVol[4];
+byte pokey_poly17[POKEY_POLY17_SIZE];
+uint pokey_poly17Size;
+uint pokey_polyAdjust __attribute__((section(".dtcm")));
+uint pokey_poly04Cntr __attribute__((section(".dtcm")));
+uint pokey_poly05Cntr __attribute__((section(".dtcm")));
+uint pokey_poly17Cntr __attribute__((section(".dtcm")));
+uint pokey_divideMax[4];
+uint pokey_divideCount[4];
+uint pokey_sampleMax __attribute__((section(".dtcm")));
+uint pokey_sampleCount[2];
+uint pokey_baseMultiplier;
 
 static byte rand9[0x1ff];
 static byte rand17[0x1ffff];

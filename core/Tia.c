@@ -56,9 +56,9 @@ static byte TIA_DIV31[ ]        __attribute__((section(".dtcm"))) = {1,0,0,0,0,0
 byte tia_audc[2]                __attribute__((section(".dtcm"))) = {0};
 byte tia_audf[2]                __attribute__((section(".dtcm"))) = {0};
 byte tia_audv[2]                __attribute__((section(".dtcm"))) = {0};
-static byte tia_poly4Cntr[2]    __attribute__((section(".dtcm"))) = {0};
-static byte tia_poly5Cntr[2]    __attribute__((section(".dtcm"))) = {0};
-static u16 tia_poly9Cntr[2]     __attribute__((section(".dtcm"))) = {0};
+byte tia_poly4Cntr[2]    __attribute__((section(".dtcm"))) = {0};
+byte tia_poly5Cntr[2]    __attribute__((section(".dtcm"))) = {0};
+u16 tia_poly9Cntr[2]     __attribute__((section(".dtcm"))) = {0};
 u16 tia_wait                    __attribute__((section(".dtcm"))) = 0;
 
 // ----------------------------------------------------------------------------

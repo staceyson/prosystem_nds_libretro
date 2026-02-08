@@ -27,14 +27,19 @@
 #include "Tia.h"
 #include "Memory.h"
 #include "Rect.h"
-// #include "BupChip.h"
 
 // Rocket - arbitrarily assume we are faster than the DS-Lite?  Actually I found later in many cases the
 //          DS_LITE code is more generically appropriate.
 u8 isDS_LITE = FALSE;
 
-// Rocket - on the NDS version you can skip BIOS by holding start at startup.  TO-DO make a core option.
+// Rocket - on the NDS version you can skip BIOS by holding start at startup.  A core option can set this.
 u8 bSkipBIOS = FALSE;
+
+// Add ability for the core to completely skip savestate logic for low performing targets.
+static u8 skipSaveStates = FALSE;
+
+// Add core variable based palette temp setting.
+static u8 paletteTemp = -1; 
 
 // Rocket - on the NDS version you can skip the settings database load by holding select at startup.
 //         The A7800DS.dat external file load is already disabled for this core.  Eventually any
@@ -74,14 +79,8 @@ u32 myTiaBufIdx = 10000;  // Arbitrarily big.
 //         have FPS capabilities, but it's also used for frameskipping logic, which could be useful - leave it in.
 u16 gTotalAtariFrames = 0;
 
-// This determines the amount of frameskip.  For now set as disabled, but this could certainly become a
-// core option for a libretro core.
+// This determines the amount of frameskip.  Added as a core option.
 u8 frameSkipMask = 0xFF;
-
-// From the original code:
-    //  if (myCartInfo.frameSkip == FRAMESKIP_MEDIUM)     frameSkipMask = 0x03;
-    //  if (myCartInfo.frameSkip == FRAMESKIP_AGGRESSIVE) frameSkipMask = 0x01;
-
 
 #ifdef _3DS
 extern void* linearMemAlign(size_t size, size_t alignment);
@@ -125,10 +124,8 @@ static bool low_pass_enabled           = false;
 static int32_t low_pass_range          = 0;
 static int32_t low_pass_prev           = 0; /* Previous sample */
 
-/* Save state info */
-#define SAVE_STATE_SIZE                49221
-#define FAST_SAVE_STATE_SIZE           83968
-static bool fast_savestates;
+/* Save state size was determined empirically.  */
+#define SAVE_STATE_SIZE 165000
 
 static retro_log_printf_t log_cb;
 static retro_video_refresh_t video_cb;
@@ -419,15 +416,12 @@ static void update_input(void)
    keyboard_data[4]  = joypad_bits[0] & (1 << RETRO_DEVICE_ID_JOYPAD_B)      ? 1 : 0;
    keyboard_data[5]  = joypad_bits[0] & (1 << RETRO_DEVICE_ID_JOYPAD_A)      ? 1 : 0;
 
-
-
    keyboard_data[6]  = joypad_bits[1] & (1 << RETRO_DEVICE_ID_JOYPAD_RIGHT)  ? 1 : j2_override_right;
    keyboard_data[7]  = joypad_bits[1] & (1 << RETRO_DEVICE_ID_JOYPAD_LEFT)   ? 1 : j2_override_left;
    keyboard_data[8]  = joypad_bits[1] & (1 << RETRO_DEVICE_ID_JOYPAD_DOWN)   ? 1 : j2_override_down;
    keyboard_data[9]  = joypad_bits[1] & (1 << RETRO_DEVICE_ID_JOYPAD_UP)     ? 1 : j2_override_up;
    keyboard_data[10] = joypad_bits[1] & (1 << RETRO_DEVICE_ID_JOYPAD_B)      ? 1 : 0;
    keyboard_data[11] = joypad_bits[1] & (1 << RETRO_DEVICE_ID_JOYPAD_A)      ? 1 : 0;
-
 
    keyboard_data[12] = joypad_bits[0] & (1 << RETRO_DEVICE_ID_JOYPAD_X)      ? 1 : 0;
    keyboard_data[13] = joypad_bits[0] & (1 << RETRO_DEVICE_ID_JOYPAD_SELECT) ? 1 : 0;
@@ -508,7 +502,59 @@ void check_variables(bool first_run)
       if (strcmp(var.value, "enabled") == 0)
          gamepad_dual_stick_hack = true;
 
-/* 
+    bSkipBIOS = FALSE;
+    var.key = "prosystem_nds_skipbios";
+    var.value = NULL;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+    {
+        if (strcmp(var.value, "enabled") == 0)
+            bSkipBIOS = TRUE;
+    }
+
+    skipSaveStates = FALSE;
+    var.key = "prosystem_nds_skipsavestates";
+    var.value = NULL;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+    {
+        if (strcmp(var.value, "enabled") == 0)
+            skipSaveStates = TRUE;
+    }
+
+    frameSkipMask = 0xFF;
+    var.key = "prosystem_nds_frameskip";
+    var.value = NULL;
+
+// From the original A7800DS code:
+    //  if (myCartInfo.frameSkip == FRAMESKIP_MEDIUM)     frameSkipMask = 0x03;
+    //  if (myCartInfo.frameSkip == FRAMESKIP_AGGRESSIVE) frameSkipMask = 0x01;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+    {
+        if (strcmp(var.value, "off") == 0)
+            frameSkipMask = 0xFF;
+        else if (strcmp(var.value, "medium") == 0)
+            frameSkipMask = 0x03;
+        else if (strcmp(var.value, "aggressive") == 0)
+            frameSkipMask = 0x01;
+    }
+
+    paletteTemp = -1;  // -1 indicates no override.  "off" setting for var will leave this as -1.
+    var.key = "prosystem_nds_palettetemp";
+    var.value = NULL;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+    {
+        if (strcmp(var.value, "cool") == 0)
+            paletteTemp = 0;
+        else if (strcmp(var.value, "warm") == 0)
+            paletteTemp = 1;
+        else if (strcmp(var.value, "hot") == 0)
+            paletteTemp = 2;
+    }
+
+/*
 
 Rocketfan - the following two core variables are intended primarily for the
             Atari flashback devices which have only a single action button to 
@@ -574,7 +620,6 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    info->timing.fps            =  REGION_FREQUENCY_NTSC;
 
 // Rocketfan - this results in a "non-standard" audio sample rate of 31440 - not 44100 or... But it works.
-// Consider cutting the samples per line in half for hard to emulate games via core option.
    info->timing.sample_rate    = (REGION_FREQUENCY_NTSC * REGION_SCANLINES_NTSC) << 1; /* 2 samples per scanline */
    info->geometry.base_width   = videoWidth;
    //info->geometry.base_height  = 223;
@@ -591,56 +636,28 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
 }
 
 
-bool get_fast_savestates(void)
-{
-   int result = -1;
-   bool okay = false;
-   okay = environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
-   if (okay)
-   {
-      return 0 != (result & 4);
-   }
-   else
-   {
-      return 0;
-   }
-}
-
-
 // Rocket - returning zero from this supposedly (?) indicates to frontend that savestates are not supported.
-//          TO-DO - This code is from the original core and almost certainly won't work.  Fix it!
 size_t retro_serialize_size(void) 
 {
-       // Rocket - TO-DO - disable this until I have time to figure it out.
-       return 0;   
-#if 0
-   fast_savestates = get_fast_savestates();
-   if (fast_savestates)
-      return FAST_SAVE_STATE_SIZE;
-   else
-      return SAVE_STATE_SIZE;
-#endif
-}
+       if (skipSaveStates)
+           return 0;
 
+       return SAVE_STATE_SIZE;   
+}
 
 bool retro_serialize(void *data, size_t size)
 {
-   fast_savestates = get_fast_savestates();
-   if ((fast_savestates && size != FAST_SAVE_STATE_SIZE) || (!fast_savestates && size != SAVE_STATE_SIZE))
+   if (size < SAVE_STATE_SIZE  || skipSaveStates)
       return false;
 
-   // return prosystem_Save((char*)data, fast_savestates);
-   return false;
+   return prosystem_Save((char*)data);
 }
 
 bool retro_unserialize(const void *data, size_t size)
 {
-   fast_savestates = get_fast_savestates();
-   if ((fast_savestates && size != FAST_SAVE_STATE_SIZE) || (!fast_savestates && size != SAVE_STATE_SIZE))
+   if (size < SAVE_STATE_SIZE  || skipSaveStates)
       return false;
-
-   // return prosystem_Load((const char*)data, fast_savestates);
-   return false;
+   return prosystem_Load((const char*)data);
 }
 
 
@@ -695,9 +712,6 @@ bool retro_load_game(const struct retro_game_info *info)
 
    if (!info)
       return false;
-
-fprintf(stdout, "Size is %d\n", info->size);
-fflush(stdout);
 
    environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
 
@@ -756,10 +770,16 @@ fflush(stdout);
 //    tried (so far) works OK?  ALSO - PAL is not supported by this core!  Must use NTSC carts.
 //    That was a limitation of the NDS version, and still is.
    
-if (!bSkipBIOS) {
-   sprintf(biospath, "%s%c%s", system_directory_c, slash, "7800 BIOS (U).rom");
-   bios_check_and_load(biospath);
-}
+   if (!bSkipBIOS) {
+       sprintf(biospath, "%s%c%s", system_directory_c, slash, "7800 BIOS (U).rom");
+       bios_check_and_load(biospath);
+   }
+
+   // If set, override the palette temp for the cartridge from the core variable.
+   // prosystem_Reset below indirectly loads the palette.
+   if (paletteTemp >= 0) {
+      myCartInfo.palette = paletteTemp;
+   }
 
    prosystem_Reset();
 
@@ -768,7 +788,7 @@ if (!bSkipBIOS) {
 //          To load the Palette via Region_reset.  In the case of A7800DS this is influenced by
 //          information in an A7800DS.dat settings file with optional settings per game which is
 //          currently disabled in this core.  That settings file can have a cool/warm/hot palette
-//          setting per game.  TO-DO This would make more sense as a core setting in Libretro.
+//          setting per game.  For libretro this can be set by a core variable and per-game-override.
    display_ResetPalette();
 
    return true;

@@ -61,4 +61,11 @@ extern uint prosystem_cycles;
 extern void Trace(word data);
 extern void Trace2(word addr, u8 data);
 
+// Rocket - from old core for serialization.
+uint32_t read_uint32_from_buffer(const char* buffer, uint32_t* offset);
+void save_uint32_to_buffer(char* buffer, uint32_t* size, uint32_t data);
+uint16_t read_uint16_from_buffer(const char* buffer, uint32_t* offset);
+void save_uint16_to_buffer(char* buffer, uint32_t* size, uint16_t data);
+bool prosystem_Load(const char *buffer);
+bool prosystem_Save(char *buffer);
 #endif

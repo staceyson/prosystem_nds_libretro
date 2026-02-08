@@ -71,6 +71,31 @@
 #define POKEY_IRQST 0x400e
 #define POKEY_SKSTAT 0x400f
 
+#define POKEY_NOTPOLY5 0x80
+#define POKEY_POLY4 0x40
+#define POKEY_PURE 0x20
+#define POKEY_VOLUME_ONLY 0x10
+#define POKEY_VOLUME_MASK 0x0f
+#define POKEY_POLY9 0x80 
+#define POKEY_CH1_179 0x40
+#define POKEY_CH3_179 0x20
+#define POKEY_CH1_CH2 0x10
+#define POKEY_CH3_CH4 0x08
+#define POKEY_CH1_FILTER 0x04
+#define POKEY_CH2_FILTER 0x02
+#define POKEY_CLOCK_15 0x01
+#define POKEY_DIV_64 28
+#define POKEY_DIV_15 114
+#define POKEY_POLY4_SIZE 0x000f
+#define POKEY_POLY5_SIZE 0x001f
+#define POKEY_POLY9_SIZE 0x01ff
+#define POKEY_POLY17_SIZE 0x0001ffff
+#define POKEY_CHANNEL1 0
+#define POKEY_CHANNEL2 1
+#define POKEY_CHANNEL3 2
+#define POKEY_CHANNEL4 3
+#define POKEY_SAMPLE 4
+
 #include "shared.h"
 #define CYCLES_PER_SCANLINE 454
 
@@ -81,6 +106,25 @@ extern void pokey_Process(void);
 extern u16 pokey_ProcessNow(void);
 extern void pokey_Clear( );
 extern uint32 random_scanline_counter;
+
+/* These are needed for serialization of states. */
+extern byte pokey_output[4];
+extern byte pokey_outVol[4];
+extern byte pokey_poly17[POKEY_POLY17_SIZE];
+extern uint pokey_poly17Size;
+extern uint pokey_polyAdjust;
+extern uint pokey_poly04Cntr;
+extern uint pokey_poly05Cntr;
+extern uint pokey_poly17Cntr;
+extern uint pokey_divideMax[4];
+extern uint pokey_divideCount[4];
+extern uint pokey_sampleMax;
+extern uint pokey_sampleCount[2];
+extern uint pokey_baseMultiplier;
+
+extern uint pokey_audf[4];
+extern uint pokey_audc[4];
+extern uint pokey_audctl;
 
 /* Called prior to each scanline */
 inline void pokey_Scanline() 

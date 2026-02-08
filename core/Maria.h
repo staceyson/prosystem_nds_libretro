@@ -41,4 +41,7 @@ extern void maria_Clear( );
 extern word* maria_surface;
 extern uint maria_scanline;
 
+extern u32 bg32, maria_charbase;
+extern u8 bg8;
+
 #endif

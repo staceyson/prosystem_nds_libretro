@@ -52,7 +52,7 @@ u8 bios_available           __attribute__((section(".dtcm"))) = 0;
                      why anything has to be copied around instead of just pointing to the right area, but
                      this is complicated (and working).  Maybe it could be made more efficient by 
                      some re-thinking with loads of memory in mind, but it should be fine on almost any 
-                     target - as it's working OK-ish on the old Rockchip arm processors on atari flashbacks.
+                     target - as it's working OK-ish on the old Rockchip ARM processors on Atari flashbacks.
 */
 
 u8 cart_restore = 0;            // After the cart is stored, we set this flag to indicate a swap will restore only the top 4K
@@ -786,7 +786,7 @@ void bios_check_and_load(char *defaultLibretroBIOSPath)
     
     FILE *romfile = fopen(defaultLibretroBIOSPath, "rb");
     // These are all leftover from the NDS search locations, but I don't see what it hurts to look elsewhere.
-    // Note that it should be aan NTSC (U) flavor of the BIOS!
+    // Note that it should be an NTSC (U) flavor of the BIOS!
     if (romfile == NULL) romfile = fopen("7800.rom", "rb");
     if (romfile == NULL) romfile = fopen("/roms/bios/7800.rom", "rb");
     if (romfile == NULL) romfile = fopen("/data/bios/7800.rom", "rb");

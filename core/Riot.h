@@ -44,5 +44,17 @@ extern u32 snes_adaptor;
 extern void riot_SetDRA(byte data);
 extern void riot_SetDRB(byte data);
 
+extern uint riot_and_wsync;
+extern int  riot_timer;
+extern int  riot_intervals;
+
+extern byte riot_dra;
+extern byte riot_drb;
+
+extern uint riot_elapsed;
+extern int riot_currentTime;
+extern uint riot_clocks;
+extern uint riot_shift;
+
 
 #endif

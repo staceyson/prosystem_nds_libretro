@@ -110,6 +110,53 @@ struct retro_core_option_definition option_defs_us[] = {
       },
       "disabled"
    },
+   {
+      "prosystem_nds_skipsavestates",
+      "Skip Savestate Processing",
+      "Skips the core savestate logic.  This will disable savestates and rewind but can dramatically improve performance on very low-spec hardware.",
+      {
+         { "disabled", NULL},
+         { "enabled",  NULL},
+         { NULL, NULL },
+      },
+      "disabled"
+   },
+   {
+      "prosystem_nds_frameskip",
+      "Frameskip Strategy",
+      "Set the level of frameskip desired.  Can increase performance at the expense of increased choppiness of emulation.",
+      {
+         { "off", NULL},
+         { "medium",  NULL},
+         { "aggressive",  NULL},
+         { NULL, NULL },
+      },
+      "off"
+   },
+   {
+      "prosystem_nds_skipbios",
+      "Skip BIOS Load",
+      "Skip loading of the BIOS file.",
+      {
+         { "disabled", NULL},
+         { "enabled",  NULL},
+         { NULL, NULL },
+      },
+      "disabled"
+   },
+   {
+      "prosystem_nds_palettetemp",
+      "Palette Temperature",
+      "Override the palette temperature for display colors.",
+      {
+         { "off", NULL},
+         { "cool", NULL},
+         { "warm",  NULL},
+         { "hot",  NULL},
+         { NULL, NULL },
+      },
+      "off"
+   },
    { NULL, NULL, NULL, {{0}}, NULL },
 };
 

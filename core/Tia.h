@@ -66,6 +66,11 @@ extern uint tia_counter[2];
 extern uint tia_counterMax[2];
 extern u16  tia_wait;
 extern u32  myTiaBufIdx;
+extern u32 tiaBufIdx;   
+
+extern byte tia_poly4Cntr[2];
+extern byte tia_poly5Cntr[2];
+extern u16 tia_poly9Cntr[2];
 
 
 inline void tia_MemoryChannel(byte channel) 

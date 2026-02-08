@@ -31,8 +31,8 @@ byte sally_y __attribute__((section(".dtcm"))) = 0;
 uint sally_p __attribute__((section(".dtcm"))) = 0;
 uint sally_s __attribute__((section(".dtcm"))) = 0;
 
-static PCUnion sally_pc      __attribute__((section(".dtcm"))) = {0};
-static PCUnion sally_address __attribute__((section(".dtcm")));
+PCUnion sally_pc      __attribute__((section(".dtcm"))) = {0};
+PCUnion sally_address __attribute__((section(".dtcm")));
 static uint sally_cyclesX4   __attribute__((section(".dtcm")));
 
 byte last_illegal_opcode = 0;

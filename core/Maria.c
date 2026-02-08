@@ -53,6 +53,8 @@ u8 write_mask_high              __attribute__((section(".dtcm")));
 u8 bg8                          __attribute__((section(".dtcm")));
 
 uint maria_cycles               __attribute__((section(".dtcm")));
+
+
 static lpair maria_dpp          __attribute__((section(".dtcm")));
 static lpair maria_dp           __attribute__((section(".dtcm")));
 static lpair maria_pp           __attribute__((section(".dtcm")));

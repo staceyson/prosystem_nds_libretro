@@ -118,4 +118,14 @@ extern char cartridge_title[256];
 extern byte cartridge_digest[256];
 extern char cartridge_filename[256];
 
+// Rocket - for serialization.
+extern byte last_bank;
+extern byte ex_ram_bank;
+extern byte last_ex_ram_bank;
+extern byte ex_ram_bank_df;
+extern byte last_ex_ram_bank_df;
+
+extern byte ex_ram_buffer[0x8000];
+extern byte banksets_memory[64*1024];
+
 #endif
